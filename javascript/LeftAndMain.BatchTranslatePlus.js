@@ -30,7 +30,7 @@
                     id = 'ss-ui-dialog-' + new Date().getTime(),
                     selectValue = $('#Form_BatchActionsForm_Action').val();
 
-                if(selectValue.indexOf('translate') === -1  || this.getProcessed() === true){
+                if(selectValue.indexOf('selected') === -1  || this.getProcessed() === true){
                     this._super(e);
                     this.setProcessed(false); //reset
                 } else {

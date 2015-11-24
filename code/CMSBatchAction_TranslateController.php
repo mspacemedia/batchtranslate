@@ -102,11 +102,55 @@ class CMSBatchAction_TranslateController extends LeftAndMain
         $language = $data['NewTransLang'];
         $pages = explode(',', $data['PageIDs']);
 
-        foreach ($pages as $page) {
-            $p = SiteTree::get()->byID($page);
-            $p->createTranslation($language, true);
+        $status = array('translated' => array(), 'error' => array());
 
+        foreach ($pages as $p) {
+            $page = SiteTree::get()->byID($p);
+
+            $id = $page->ID;
+
+                if (!$page -> hasTranslation($language)) {
+                    try {
+                        $translation = $page -> createTranslation($language);
+                        $successMessage = $this -> duplicateRelations($page, $translation);
+                        $status['translated'][$translation->ID] = array(
+                            'TreeTitle' => $translation->TreeTitle,
+                        );
+                        $translation -> destroy();
+                        unset($translation);
+                    } catch (Exception $e) {
+                        // no permission - fail gracefully
+                        $status['error'][$page->ID] = true;
+                    }
+                }
+            $page -> destroy();
+            unset($page);
         }
+        return '<input type="hidden" class="close-dialog" />';
+    }
 
+    function applicablePages($ids) {
+        return $this -> applicablePagesHelper($ids, 'canPublish', true, false);
+    }
+    public function duplicateRelations($obj, $new) {
+        if ($has_manys = $obj -> has_many()) {
+            foreach ($has_manys as $name => $class) {
+                if ($related_objects = $obj -> $name()) {
+                    // Debug::dump($related_objects);
+                    foreach ($related_objects as $related_obj) {
+                        $o = $related_obj -> duplicate(true);
+                        $new -> $name() -> add($o);
+                    }
+                }
+            }
+        }
+        if ($many_manys = $obj -> many_many()) {
+            foreach ($many_manys as $name => $class) {
+                if ($obj -> $name()) {
+                    $new -> $name() -> setByIdList($obj -> $name() -> column());
+                }
+            }
+            $new -> write();
+        }
     }
 }

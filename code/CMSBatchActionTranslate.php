@@ -11,71 +11,60 @@
  */
 class CMSBatchActionTranslate extends CMSBatchAction
 {
-  function getActionTitle()
-  {
+  function getActionTitle() {
     return _t('CMSBatchActions.TRANSLATE_PAGES_TO_DRAFT', 'Translate to draft');
   }
+  function run(SS_List $pages) {
+    $status = array('translated' => array(), 'error' => array());
 
-  function getDoingText()
-  {
-    return _t('CMSBatchActions.TRANSLATING_PAGES_TO_DRAFT', 'Translating pages');
-  }
-
-  function run(SS_List $objs)
-  {
-    return $this->batchaction(
-        $objs,
-        null,
-        _t('CMSBatchActions.TRANSLATED_PAGES_TO_DRAFT', 'Processed %d pages and saved %d translations (draft)')
-    );
-  }
-
-  public function batchaction(SS_List $objs, $helperMethod, $successMessage, $arguments = Array())
-  {
-    $status = array('modified' => array(), 'error' => array());
-    $allowedLang = Translatable::get_existing_content_languages('SiteConfig');
-    if ($allowedLang == null)
-    {
-      return $this->response($successMessage, $status);
-    }
-    else
-    {
-      $translated = 0;
-
-      foreach($objs as $page)
-      {
-        foreach ($allowedLang as $key => $lang)
-        {
-          if ($page->Locale == $key) continue;
-          if (! $page->hasTranslation($key))
-          {
-            try
-            {
-              $translation = $page->createTranslation($key);
-              if ($helperMethod) $translation->$helperMethod();
-              $translation->destroy();
-              unset($translation);
-              $translated++;
-              $status['modified'][$publishedRecord->ID] = array(
-                  'TreeTitle' => $publishedRecord->TreeTitle,
-              );
-            }
-            catch (Exception $e)
-            {
-              // no permission - fail gracefully
-            }
+    foreach ($pages as $page) {
+      $id = $page -> ID;
+      foreach (Translatable::get_allowed_locales() as $locale) {
+        if ($page -> Locale == $locale)
+          continue;
+        if (!$page -> hasTranslation($locale)) {
+          try {
+            $translation = $page -> createTranslation($locale);
+            $successMessage = $this -> duplicateRelations($page, $translation);
+            $status['translated'][$translation->ID] = array(
+                'TreeTitle' => $translation->TreeTitle,
+            );
+            $translation -> destroy();
+            unset($translation);
+          } catch (Exception $e) {
+            // no permission - fail gracefully
+            $status['error'][$page->ID] = true;
           }
         }
-
-        $page->destroy();
-        unset($page);
       }
-
-      $message = sprintf($successMessage, $objs->Count(), $translated);
-      return $this->response($message, $status);
+      $page -> destroy();
+      unset($page);
     }
-
-    return $this->response($successMessage, $status);
+    return $this->response(_t('CMSBatchActions.TRANSLATED_PAGES', 'Translated %d pages to draft site, %d failures'), $status);
+  }
+  function applicablePages($ids) {
+    return $this -> applicablePagesHelper($ids, 'canPublish', true, false);
+  }
+  public function duplicateRelations($obj, $new) {
+    if ($has_manys = $obj -> has_many()) {
+      foreach ($has_manys as $name => $class) {
+        if ($related_objects = $obj -> $name()) {
+          // Debug::dump($related_objects);
+          foreach ($related_objects as $related_obj) {
+            $o = $related_obj -> duplicate(true);
+            $new -> $name() -> add($o);
+          }
+        }
+      }
+    }
+    if ($many_manys = $obj -> many_many()) {
+      foreach ($many_manys as $name => $class) {
+        if ($obj -> $name()) {
+          $new -> $name() -> setByIdList($obj -> $name() -> column());
+        }
+      }
+      $new -> write();
+    }
   }
 }
 
@@ -107,6 +96,19 @@ class CMSBatchActionTranslateAndPublish extends CMSBatchActionTranslate
         'doPublish',
         _t('CMSBatchActions.TRANSLATED_PAGES_TO_LIVE', 'Processed %s pages and saved %s translations (live)')
     );
+  }
+}
+
+class CMSBatchActionTranslateSelected extends CMSBatchAction
+{
+  function getActionTitle()
+  {
+    return _t('CMSBatchActions.TRANSLATE_SELECTED_PAGES_TO', 'Translate to selected language');
+  }
+
+  function run(SS_List $objs)
+  {
+    // NULL: Run method is handled by Controller.
   }
 }
 ?>
