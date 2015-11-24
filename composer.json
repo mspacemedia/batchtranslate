@@ -1,0 +1,18 @@
+{
+  "name": "mspacemedia/ss-batchtranslate",
+  "description": "Utilities to batch translate multiple pages",
+  "type": "silverstripe-module",
+  "keywords": ["silverstripe", "translation", "batch translation"],
+  "license": "BSD-3-Clause",
+  "authors": [{
+    "name": "Mark Muller",
+    "homepage": "http://m-spacemedia.com"
+  }],
+  "require": {
+    "silverstripe/framework": "~3.1",
+    "silverstripe/translatable": " ~2.0"
+  },
+  "extra": {
+    "installer-name": "batchtranslate"
+  }
+}
