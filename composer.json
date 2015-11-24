@@ -1,5 +1,5 @@
 {
-  "name": "mspacemedia/ss-batchtranslate",
+  "name": "mspacemedia/batchtranslate",
   "description": "Utilities to batch translate multiple pages",
   "type": "silverstripe-module",
   "keywords": ["silverstripe", "translation", "batch translation"],
