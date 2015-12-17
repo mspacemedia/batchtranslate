@@ -46,7 +46,7 @@ class CMSBatchAction_TranslateController extends LeftAndMain
         Versioned::reading_stage('Stage'); // Needs this for changes to effect draft tree
 
 
-        $languages = Translatable::get_allowed_locales();
+        $languages = array_combine(Translatable::get_allowed_locales(), Translatable::get_allowed_locales());
 
         $action = FormAction::create('doTranslatePages', 'Translate')
             ->setUseButtonTag('true')
@@ -65,7 +65,7 @@ class CMSBatchAction_TranslateController extends LeftAndMain
         }
 
         $allFields->push(new HiddenField("PageIDs", "PageIDs", $pageIDs));
-        $allFields->push(LanguageDropdownField::create("NewTransLang", _t('Translatable.NEWLANGUAGE', 'New language'), $languages ));
+        $allFields->push(CheckboxSetField::create("NewTransLang", _t('Translatable.NEWLANGUAGE', 'New language'), $languages ));
 
         $headings = new CompositeField(
             new LiteralField(
@@ -99,7 +99,7 @@ class CMSBatchAction_TranslateController extends LeftAndMain
     public function doTranslatePages($data, $form)
     {
 
-        $language = $data['NewTransLang'];
+        $languages = $data['NewTransLang'];
         $pages = explode(',', $data['PageIDs']);
 
         $status = array('translated' => array(), 'error' => array());
@@ -109,20 +109,22 @@ class CMSBatchAction_TranslateController extends LeftAndMain
 
             $id = $page->ID;
 
-                if (!$page -> hasTranslation($language)) {
+            foreach ($languages as $language) {
+                if (!$page->hasTranslation($language)) {
                     try {
-                        $translation = $page -> createTranslation($language);
-                        $successMessage = $this -> duplicateRelations($page, $translation);
+                        $translation = $page->createTranslation($language);
+                        $successMessage = $this->duplicateRelations($page, $translation);
                         $status['translated'][$translation->ID] = array(
                             'TreeTitle' => $translation->TreeTitle,
                         );
-                        $translation -> destroy();
+                        $translation->destroy();
                         unset($translation);
                     } catch (Exception $e) {
                         // no permission - fail gracefully
                         $status['error'][$page->ID] = true;
                     }
                 }
+            }
             $page -> destroy();
             unset($page);
         }
