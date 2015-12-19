@@ -65,7 +65,7 @@ class CMSBatchAction_TranslateController extends LeftAndMain
         }
 
         $allFields->push(new HiddenField("PageIDs", "PageIDs", $pageIDs));
-        $allFields->push(CheckboxSetField::create("NewTransLang", _t('Translatable.NEWLANGUAGE', 'New language'), $languages ));
+        $allFields->push(CheckboxSetField::create("NewTransLang", _t('Translatable.NEWLANGUAGE', 'New language'), $languages));
 
         $headings = new CompositeField(
             new LiteralField(
@@ -98,7 +98,6 @@ class CMSBatchAction_TranslateController extends LeftAndMain
      **/
     public function doTranslatePages($data, $form)
     {
-
         $languages = $data['NewTransLang'];
         $pages = explode(',', $data['PageIDs']);
 
@@ -131,10 +130,12 @@ class CMSBatchAction_TranslateController extends LeftAndMain
         return '<input type="hidden" class="close-dialog" />';
     }
 
-    function applicablePages($ids) {
+    public function applicablePages($ids)
+    {
         return $this -> applicablePagesHelper($ids, 'canPublish', true, false);
     }
-    public function duplicateRelations($obj, $new) {
+    public function duplicateRelations($obj, $new)
+    {
         if ($has_manys = $obj -> has_many()) {
             foreach ($has_manys as $name => $class) {
                 if ($related_objects = $obj -> $name()) {
