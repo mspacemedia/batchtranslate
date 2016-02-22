@@ -24,7 +24,7 @@ class CMSBatchAction_TranslateController extends LeftAndMain
      * and from $this->doTranslatePages().
      *
      * @param Request $request , String $pageIDs
-     * @return Form rendered within CMSDialog
+     * @return HTMLText rendered within CMSDialog
      */
     public function index($request, $pageIDs = null)
     {
@@ -94,7 +94,7 @@ class CMSBatchAction_TranslateController extends LeftAndMain
      * Handles the translation of pages and its relations
      *
      * @param array $data , Form $form
-     * @return boolean | index function
+     * @return string | index function
      **/
     public function doTranslatePages($data, $form)
     {
@@ -134,6 +134,10 @@ class CMSBatchAction_TranslateController extends LeftAndMain
     {
         return $this -> applicablePagesHelper($ids, 'canPublish', true, false);
     }
+
+    /**
+     * @param DataObject $obj
+     */
     public function duplicateRelations($obj, $new)
     {
         if ($has_manys = $obj -> has_many()) {
