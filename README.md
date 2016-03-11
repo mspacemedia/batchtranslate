@@ -1,5 +1,5 @@
 # Batch Translate
-A module to allow selection of a language when selecting multiple pages in the SiteTree for batch translation
+A module to allow selection of one or more languages when selecting multiple pages in the SiteTree for batch translation, also includes ability to duplicate direct children too.
 
 
 Batch translation class provided from here: http://klitsche.de / http://fake-media.com & https://github.com/arillo/silverstripe-cleanutilities
