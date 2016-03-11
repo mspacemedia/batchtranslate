@@ -66,6 +66,7 @@ class CMSBatchAction_TranslateController extends LeftAndMain
 
         $allFields->push(new HiddenField("PageIDs", "PageIDs", $pageIDs));
         $allFields->push(CheckboxSetField::create("NewTransLang", _t('Translatable.NEWLANGUAGE', 'New language'), $languages ));
+		$allFields->push(OptionsetField::create("DuplicateChildren", _t('Translatable.DUPECHILDREN', 'Duplicate Children'), array('true' => 'Yes', 'false' => 'No') ));
 
         $headings = new CompositeField(
             new LiteralField(
@@ -119,6 +120,22 @@ class CMSBatchAction_TranslateController extends LeftAndMain
                         );
                         $translation->destroy();
                         unset($translation);
+						if ($data['DuplicateChildren'] == "true" ) {
+							$children = $page->AllChildren();
+							if ($children) {
+								foreach ($children as $child) {
+									$translation = $child->createTranslation($language);
+									$successMessage = $this->duplicateRelations($child, $translation);
+									$status['translated'][$translation->ID] = array(
+										'TreeTitle' => $translation->TreeTitle,
+									);
+									$translation->destroy();
+									unset($translation);
+									$child->destroy();
+									unset($child);
+								}
+							}
+						}
                     } catch (Exception $e) {
                         // no permission - fail gracefully
                         $status['error'][$page->ID] = true;
@@ -131,10 +148,12 @@ class CMSBatchAction_TranslateController extends LeftAndMain
         return '<input type="hidden" class="close-dialog" />';
     }
 
-    function applicablePages($ids) {
+    public function applicablePages($ids)
+    {
         return $this -> applicablePagesHelper($ids, 'canPublish', true, false);
     }
-    public function duplicateRelations($obj, $new) {
+    public function duplicateRelations($obj, $new)
+    {
         if ($has_manys = $obj -> has_many()) {
             foreach ($has_manys as $name => $class) {
                 if ($related_objects = $obj -> $name()) {
