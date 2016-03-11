@@ -68,6 +68,7 @@ class CMSBatchAction_TranslateController extends LeftAndMain
         $allFields->push(CheckboxSetField::create("NewTransLang", _t('Translatable.NEWLANGUAGE', 'New language'), $languages ));
 		$allFields->push(OptionsetField::create("DuplicateChildren", _t('Translatable.DUPECHILDREN', 'Duplicate Children'), array('true' => 'Yes', 'false' => 'No') ));
 
+
         $headings = new CompositeField(
             new LiteralField(
                 'Heading',
